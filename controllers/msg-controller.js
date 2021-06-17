@@ -1,5 +1,5 @@
-import ChatModel from "../models/ChatModel";
-import UserModel from "../models/UserModel";
+import ChatModel from "../models/ChatModel.js";
+import UserModel from "../models/UserModel.js";
 
 const colFilter = { password: 0, __v: 0 };
 

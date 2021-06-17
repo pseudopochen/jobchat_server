@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 
 import indexRouter from "./routes/index.js";
+import ChatModel from "./models/ChatModel.js";
 
 try {
   await mongoose.connect(
@@ -28,7 +29,28 @@ app.use(cookieParser());
 app.use("/", indexRouter);
 
 const server = http.createServer(app);
-const io = new Server(server);
+
+const io = new Server(server, {
+  cors: {
+    // prevent CORS error according to https://socket.io/docs/v4/handling-cors/, react proxy only handles http requests, not ws requests
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+  },
+});
+
+io.on("connection", function (socket) {
+  socket.on("clientToServer", function ({ from, to, content }) {
+    const chat_id = [from, to].sort().join("_");
+    const create_time = Date.now();
+    ChatModel.create({ from, to, content, chat_id, create_time })
+      .then((chatMsg) => {
+        io.emit("serverToClient", chatMsg);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  });
+});
 
 server.listen(5000, () => {
   console.log("listening on *:5000");
